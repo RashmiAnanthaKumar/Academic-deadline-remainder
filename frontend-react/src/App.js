@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const BASE_URL = "https://academic-deadline-remainder-production.up.railway.app/";
+const BASE_URL = "https://academic-deadline-remainder-production.up.railway.app";
 
 const API_TASK = `${BASE_URL}/api/tasks`;
 const API_AUTH = `${BASE_URL}/api/auth`;
