@@ -1,4 +1,4 @@
-const Task = require("../models/Task");
+const Task = require("../models/task");
 
 // Create Task (with duplicate check)
 exports.createTask = async (req, res) => {
