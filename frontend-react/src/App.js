@@ -176,7 +176,8 @@ function Dashboard() {
                 <p><b>Message:</b> {s.message}</p>
 
                 {s.file && (
-                  <a href={`http://localhost:5000/uploads/${s.file}`} target="_blank">
+                  //<a href={`http://localhost:5000/uploads/${s.file}`} target="_blank">
+                  <a href = "something" target="blank" rel = "noopener noreferrer">http://localhost:5000/uploads/${s.file}
                     📎 View File
                   </a>
                 )}
