@@ -51,14 +51,30 @@ function App() {
         <h2>{isLogin ? "Login" : "Register"}</h2>
 
         {!isLogin && (
-          <input placeholder="Name" onChange={(e) => setName(e.target.value)} style={input}/>
+          <input
+            placeholder="Name"
+            onChange={(e) => setName(e.target.value)}
+            style={input}
+          />
         )}
 
-        <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} style={input}/>
-        <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} style={input}/>
+        <input
+          placeholder="Email"
+          onChange={(e) => setEmail(e.target.value)}
+          style={input}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          onChange={(e) => setPassword(e.target.value)}
+          style={input}
+        />
 
         {!isLogin && (
-          <select onChange={(e) => setRole(e.target.value)} style={input}>
+          <select
+            onChange={(e) => setRole(e.target.value)}
+            style={input}
+          >
             <option value="student">Student</option>
             <option value="professor">Professor</option>
           </select>
@@ -68,7 +84,7 @@ function App() {
           {isLogin ? "Login" : "Register"}
         </button>
 
-        <p onClick={() => setIsLogin(!isLogin)} style={{cursor:"pointer"}}>
+        <p onClick={() => setIsLogin(!isLogin)} style={{ cursor: "pointer" }}>
           {isLogin ? "Create account" : "Already have account?"}
         </p>
       </div>
@@ -114,7 +130,7 @@ function Dashboard() {
 
     await fetch(API_SUBMIT, {
       method: "POST",
-      body: formData
+      body: formData,
     });
 
     alert("Submitted!");
@@ -123,15 +139,16 @@ function Dashboard() {
 
   return (
     <div style={container}>
-      
       <div style={sidebar}>
         <h2>📚 Dashboard</h2>
         <p>{role}</p>
 
-        <button onClick={() => {
-          localStorage.clear();
-          window.location.reload();
-        }}>
+        <button
+          onClick={() => {
+            localStorage.clear();
+            window.location.reload();
+          }}
+        >
           Logout
         </button>
       </div>
@@ -149,7 +166,10 @@ function Dashboard() {
                 <input
                   placeholder="Type message (Done...)"
                   onChange={(e) =>
-                    setMessages({ ...messages, [task._id]: e.target.value })
+                    setMessages({
+                      ...messages,
+                      [task._id]: e.target.value,
+                    })
                   }
                   style={input}
                 />
@@ -157,11 +177,16 @@ function Dashboard() {
                 <input
                   type="file"
                   onChange={(e) =>
-                    setFiles({ ...files, [task._id]: e.target.files[0] })
+                    setFiles({
+                      ...files,
+                      [task._id]: e.target.files[0],
+                    })
                   }
                 />
 
-                <button onClick={() => submitTask(task._id)}>Submit</button>
+                <button onClick={() => submitTask(task._id)}>
+                  Submit
+                </button>
               </>
             )}
           </div>
@@ -172,12 +197,19 @@ function Dashboard() {
             <h2>Submissions</h2>
             {submissions.map((s, i) => (
               <div key={i} style={taskCard}>
-                <p><b>Student:</b> {s.studentName}</p>
-                <p><b>Message:</b> {s.message}</p>
+                <p>
+                  <b>Student:</b> {s.studentName}
+                </p>
+                <p>
+                  <b>Message:</b> {s.message}
+                </p>
 
                 {s.file && (
-                  //<a href={`http://localhost:5000/uploads/${s.file}`} target="_blank">
-                  <a href = "something" target="blank" rel = "noopener noreferrer">http://localhost:5000/uploads/${s.file}
+                  <a
+                    href={`http://localhost:5000/uploads/${s.file}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     📎 View File
                   </a>
                 )}
@@ -190,20 +222,24 @@ function Dashboard() {
   );
 }
 
-/* 🎨 MODERN COLORS */
-const container = { display: "flex", minHeight: "100vh", background: "#f3f4f6" };
+/* 🎨 STYLES */
+const container = {
+  display: "flex",
+  minHeight: "100vh",
+  background: "#f3f4f6",
+};
 
 const sidebar = {
   width: "250px",
-  background: "#d8b4fe", // light purple
+  background: "#d8b4fe",
   padding: "20px",
-  color: "#333"
+  color: "#333",
 };
 
 const main = {
   flex: 1,
   padding: "20px",
-  background: "#fdf2f8" // light pink
+  background: "#fdf2f8",
 };
 
 const taskCard = {
@@ -211,7 +247,7 @@ const taskCard = {
   padding: "15px",
   margin: "10px 0",
   borderRadius: "12px",
-  border: "1px solid #e5e7eb"
+  border: "1px solid #e5e7eb",
 };
 
 const center = {
@@ -219,27 +255,27 @@ const center = {
   justifyContent: "center",
   alignItems: "center",
   height: "100vh",
-  background: "#f3f4f6"
+  background: "#f3f4f6",
 };
 
 const card = {
   background: "white",
   padding: "30px",
   borderRadius: "12px",
-  width: "300px"
+  width: "300px",
 };
 
 const input = {
   width: "100%",
   padding: "8px",
-  margin: "10px 0"
+  margin: "10px 0",
 };
 
 const btn = {
   width: "100%",
   padding: "10px",
   background: "#d8b4fe",
-  border: "none"
+  border: "none",
 };
 
 export default App;
