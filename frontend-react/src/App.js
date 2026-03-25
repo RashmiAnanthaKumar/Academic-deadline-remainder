@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 
-const API_TASK = "http://localhost:5000/api/tasks";
-const API_AUTH = "http://localhost:5000/api/auth";
-const API_SUBMIT = "http://localhost:5000/api/submissions";
+const BASE_URL = "https://your-railway-url.up.railway.app";
+
+const API_TASK = `${BASE_URL}/api/tasks`;
+const API_AUTH = `${BASE_URL}/api/auth`;
+const API_SUBMIT = `${BASE_URL}/api/submissions`;
 
 function App() {
   const [isLogin, setIsLogin] = useState(true);
