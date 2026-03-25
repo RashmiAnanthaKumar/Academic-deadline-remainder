@@ -1,12 +1,11 @@
 const Task = require("../models/task");
 
-// Create Task (with duplicate check)
+// CREATE TASK
 exports.createTask = async (req, res) => {
   try {
-    const existingTask = await Task.findOne({
-      title: req.body.title,
-      deadline: req.body.deadline
-    });
+    const { title, deadline } = req.body;
+
+    const existingTask = await Task.findOne({ title, deadline });
 
     if (existingTask) {
       return res.status(400).json({ message: "Task already exists!" });
@@ -20,7 +19,7 @@ exports.createTask = async (req, res) => {
   }
 };
 
-// Get All Tasks
+// GET ALL TASKS
 exports.getTasks = async (req, res) => {
   try {
     const tasks = await Task.find().sort({ deadline: 1 });
@@ -30,12 +29,16 @@ exports.getTasks = async (req, res) => {
   }
 };
 
-// Update Task (mark as completed or change details)
+// UPDATE TASK
 exports.updateTask = async (req, res) => {
   try {
+    if (!req.body) {
+      return res.status(400).json({ message: "No data provided" });
+    }
+
     const task = await Task.findByIdAndUpdate(
       req.params.id,
-      req.body, // allows updating status or other fields
+      req.body,
       { new: true }
     );
 
@@ -49,7 +52,7 @@ exports.updateTask = async (req, res) => {
   }
 };
 
-// Delete Task
+// DELETE TASK
 exports.deleteTask = async (req, res) => {
   try {
     const task = await Task.findByIdAndDelete(req.params.id);

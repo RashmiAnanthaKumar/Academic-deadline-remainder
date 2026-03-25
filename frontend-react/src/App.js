@@ -42,7 +42,7 @@ function App() {
         alert("Registered! Now login.");
         setIsLogin(true);
       }
-    } catch (err) {
+    } catch {
       alert("Server error");
     }
   };
@@ -57,11 +57,11 @@ function App() {
         <h2>{isLogin ? "Login" : "Register"}</h2>
 
         {!isLogin && (
-          <input placeholder="Name" onChange={(e) => setName(e.target.value)} style={input} />
+          <input placeholder="Name" onChange={(e) => setName(e.target.value)} style={input}/>
         )}
 
-        <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} style={input} />
-        <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} style={input} />
+        <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} style={input}/>
+        <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} style={input}/>
 
         {!isLogin && (
           <select onChange={(e) => setRole(e.target.value)} style={input}>
@@ -92,8 +92,7 @@ function Dashboard() {
   const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState("");
 
-  const [messages, setMessages] = useState({});
-  const [files, setFiles] = useState({});
+  const [editId, setEditId] = useState(null);
 
   const getTasks = async () => {
     const res = await fetch(API_TASK);
@@ -112,42 +111,50 @@ function Dashboard() {
     getSubmissions();
   }, []);
 
-  // ✅ ADD TASK (RESTORED)
+  // ADD TASK
   const addTask = async () => {
     await fetch(API_TASK, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({ title, description, deadline }),
     });
 
-    setTitle("");
-    setDescription("");
-    setDeadline("");
-
+    resetForm();
     getTasks();
   };
 
-  // ✅ SUBMIT TASK WITH FILE
-  const submitTask = async (taskId) => {
-    const formData = new FormData();
-
-    formData.append("taskId", taskId);
-    formData.append("studentName", localStorage.getItem("name"));
-    formData.append("message", messages[taskId] || "Done");
-
-    if (files[taskId]) {
-      formData.append("file", files[taskId]);
-    }
-
-    await fetch(API_SUBMIT, {
-      method: "POST",
-      body: formData,
+  // UPDATE TASK
+  const updateTask = async () => {
+    await fetch(`${API_TASK}/${editId}`, {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ title, description, deadline }),
     });
 
-    alert("Submitted!");
-    getSubmissions();
+    resetForm();
+    getTasks();
+  };
+
+  // DELETE TASK
+  const deleteTask = async (id) => {
+    await fetch(`${API_TASK}/${id}`, {
+      method: "DELETE"
+    });
+    getTasks();
+  };
+
+  const startEdit = (task) => {
+    setEditId(task._id);
+    setTitle(task.title);
+    setDescription(task.description);
+    setDeadline(task.deadline?.substring(0,10));
+  };
+
+  const resetForm = () => {
+    setEditId(null);
+    setTitle("");
+    setDescription("");
+    setDeadline("");
   };
 
   return (
@@ -156,22 +163,27 @@ function Dashboard() {
         <h2>📚 Dashboard</h2>
         <p>{role}</p>
 
-        {/* ✅ PROFESSOR CREATE TASK UI */}
         {role === "professor" && (
           <>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" style={input} />
-            <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" style={input} />
-            <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} style={input} />
-            <button onClick={addTask} style={btn}>Add Task</button>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" style={input}/>
+            <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" style={input}/>
+            <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} style={input}/>
+
+            {editId ? (
+              <>
+                <button onClick={updateTask} style={btn}>Update Task</button>
+                <button onClick={resetForm}>Cancel</button>
+              </>
+            ) : (
+              <button onClick={addTask} style={btn}>Add Task</button>
+            )}
           </>
         )}
 
         <button onClick={() => {
           localStorage.clear();
           window.location.reload();
-        }}>
-          Logout
-        </button>
+        }}>Logout</button>
       </div>
 
       <div style={main}>
@@ -181,65 +193,28 @@ function Dashboard() {
           <div key={task._id} style={taskCard}>
             <h3>{task.title}</h3>
             <p>{task.description}</p>
-            {task.deadline && <p>{new Date(task.deadline).toDateString()}</p>}
+            <p>{new Date(task.deadline).toDateString()}</p>
 
-            {role === "student" && (
+            {role === "professor" && (
               <>
-                <input
-                  placeholder="Message"
-                  onChange={(e) =>
-                    setMessages({ ...messages, [task._id]: e.target.value })
-                  }
-                  style={input}
-                />
-
-                <input
-                  type="file"
-                  onChange={(e) =>
-                    setFiles({ ...files, [task._id]: e.target.files[0] })
-                  }
-                />
-
-                <button onClick={() => submitTask(task._id)}>Submit</button>
+                <button onClick={() => startEdit(task)}>Edit</button>
+                <button onClick={() => deleteTask(task._id)}>Delete</button>
               </>
             )}
           </div>
         ))}
-
-        {role === "professor" && (
-          <>
-            <h2>Submissions</h2>
-            {submissions.map((s, i) => (
-              <div key={i} style={taskCard}>
-                <p><b>Student:</b> {s.studentName}</p>
-                <p><b>Message:</b> {s.message}</p>
-
-                {/* ✅ FIXED FILE LINK (VERY IMPORTANT) */}
-                {s.file && (
-                  <a
-                    href={`${BASE_URL}/uploads/${s.file}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    📎 View File
-                  </a>
-                )}
-              </div>
-            ))}
-          </>
-        )}
       </div>
     </div>
   );
 }
 
-/* STYLES */
-const container = { display: "flex", minHeight: "100vh", background: "#f3f4f6" };
+/* styles same as before */
+const container = { display: "flex", minHeight: "100vh" };
 const sidebar = { width: "250px", background: "#d8b4fe", padding: "20px" };
-const main = { flex: 1, padding: "20px", background: "#fdf2f8" };
-const taskCard = { background: "white", padding: "15px", margin: "10px 0", borderRadius: "12px" };
+const main = { flex: 1, padding: "20px" };
+const taskCard = { background: "white", padding: "15px", margin: "10px 0" };
 const center = { display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" };
-const card = { background: "white", padding: "30px", borderRadius: "12px", width: "300px" };
+const card = { background: "white", padding: "30px", width: "300px" };
 const input = { width: "100%", padding: "8px", margin: "10px 0" };
 const btn = { width: "100%", padding: "10px", background: "#d8b4fe", border: "none" };
 
