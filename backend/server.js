@@ -5,40 +5,34 @@ require("dotenv").config();
 
 const app = express();
 
-// ✅ CORS FIX (IMPORTANT)
+// ✅ CORS
 app.use(cors({
-  origin: "*", // allow all (for now)
+  origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
 }));
 
-// Middleware
 app.use(express.json());
 
-// Routes
-const taskRoutes = require("./routes/taskRoutes");
-const authRoutes = require("./routes/authRoutes");
-const submissionRoutes = require("./routes/submissionRoutes");
+// ✅ Routes
+app.use("/api/tasks", require("./routes/taskRoutes"));
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/submissions", require("./routes/submissionRoutes"));
 
-app.use("/api/submissions", submissionRoutes);
-app.use("/api/tasks", taskRoutes);
-app.use("/api/auth", authRoutes);
-
-// serve files
+// ✅ Serve uploaded files
 app.use("/uploads", express.static("uploads"));
 
-// Test route
+// ✅ Test route
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// MongoDB
+// ✅ MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch((err) => console.log("MongoDB Error ❌:", err.message));
 
-// Start server
-const PORT = process.env.PORT || 5000;
+// ✅ Start server
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

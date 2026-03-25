@@ -14,32 +14,36 @@ function App() {
   const [role, setRole] = useState("student");
 
   const handleAuth = async () => {
-    const url = isLogin ? "/login" : "/register";
+    try {
+      const url = isLogin ? "/login" : "/register";
 
-    const body = isLogin
-      ? { email, password }
-      : { name, email, password, role };
+      const body = isLogin
+        ? { email, password }
+        : { name, email, password, role };
 
-    const res = await fetch(API_AUTH + url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+      const res = await fetch(API_AUTH + url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (isLogin) {
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("role", data.role);
-        localStorage.setItem("name", data.name);
-        window.location.reload();
+      if (isLogin) {
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("role", data.role);
+          localStorage.setItem("name", data.name);
+          window.location.reload();
+        } else {
+          alert(data.message);
+        }
       } else {
-        alert(data.message);
+        alert("Registered! Now login.");
+        setIsLogin(true);
       }
-    } else {
-      alert("Registered! Now login.");
-      setIsLogin(true);
+    } catch (err) {
+      alert("Server error");
     }
   };
 
@@ -53,30 +57,14 @@ function App() {
         <h2>{isLogin ? "Login" : "Register"}</h2>
 
         {!isLogin && (
-          <input
-            placeholder="Name"
-            onChange={(e) => setName(e.target.value)}
-            style={input}
-          />
+          <input placeholder="Name" onChange={(e) => setName(e.target.value)} style={input} />
         )}
 
-        <input
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-          style={input}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
-          style={input}
-        />
+        <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} style={input} />
+        <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} style={input} />
 
         {!isLogin && (
-          <select
-            onChange={(e) => setRole(e.target.value)}
-            style={input}
-          >
+          <select onChange={(e) => setRole(e.target.value)} style={input}>
             <option value="student">Student</option>
             <option value="professor">Professor</option>
           </select>
@@ -99,19 +87,24 @@ function Dashboard() {
 
   const [tasks, setTasks] = useState([]);
   const [submissions, setSubmissions] = useState([]);
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [deadline, setDeadline] = useState("");
+
   const [messages, setMessages] = useState({});
   const [files, setFiles] = useState({});
 
   const getTasks = async () => {
     const res = await fetch(API_TASK);
     const data = await res.json();
-    setTasks(data);
+    setTasks(Array.isArray(data) ? data : []);
   };
 
   const getSubmissions = async () => {
     const res = await fetch(API_SUBMIT);
     const data = await res.json();
-    setSubmissions(data);
+    setSubmissions(Array.isArray(data) ? data : []);
   };
 
   useEffect(() => {
@@ -119,6 +112,24 @@ function Dashboard() {
     getSubmissions();
   }, []);
 
+  // ✅ ADD TASK (RESTORED)
+  const addTask = async () => {
+    await fetch(API_TASK, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title, description, deadline }),
+    });
+
+    setTitle("");
+    setDescription("");
+    setDeadline("");
+
+    getTasks();
+  };
+
+  // ✅ SUBMIT TASK WITH FILE
   const submitTask = async (taskId) => {
     const formData = new FormData();
 
@@ -145,12 +156,20 @@ function Dashboard() {
         <h2>📚 Dashboard</h2>
         <p>{role}</p>
 
-        <button
-          onClick={() => {
-            localStorage.clear();
-            window.location.reload();
-          }}
-        >
+        {/* ✅ PROFESSOR CREATE TASK UI */}
+        {role === "professor" && (
+          <>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" style={input} />
+            <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" style={input} />
+            <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} style={input} />
+            <button onClick={addTask} style={btn}>Add Task</button>
+          </>
+        )}
+
+        <button onClick={() => {
+          localStorage.clear();
+          window.location.reload();
+        }}>
           Logout
         </button>
       </div>
@@ -162,16 +181,14 @@ function Dashboard() {
           <div key={task._id} style={taskCard}>
             <h3>{task.title}</h3>
             <p>{task.description}</p>
+            {task.deadline && <p>{new Date(task.deadline).toDateString()}</p>}
 
             {role === "student" && (
               <>
                 <input
-                  placeholder="Type message (Done...)"
+                  placeholder="Message"
                   onChange={(e) =>
-                    setMessages({
-                      ...messages,
-                      [task._id]: e.target.value,
-                    })
+                    setMessages({ ...messages, [task._id]: e.target.value })
                   }
                   style={input}
                 />
@@ -179,16 +196,11 @@ function Dashboard() {
                 <input
                   type="file"
                   onChange={(e) =>
-                    setFiles({
-                      ...files,
-                      [task._id]: e.target.files[0],
-                    })
+                    setFiles({ ...files, [task._id]: e.target.files[0] })
                   }
                 />
 
-                <button onClick={() => submitTask(task._id)}>
-                  Submit
-                </button>
+                <button onClick={() => submitTask(task._id)}>Submit</button>
               </>
             )}
           </div>
@@ -199,16 +211,13 @@ function Dashboard() {
             <h2>Submissions</h2>
             {submissions.map((s, i) => (
               <div key={i} style={taskCard}>
-                <p>
-                  <b>Student:</b> {s.studentName}
-                </p>
-                <p>
-                  <b>Message:</b> {s.message}
-                </p>
+                <p><b>Student:</b> {s.studentName}</p>
+                <p><b>Message:</b> {s.message}</p>
 
+                {/* ✅ FIXED FILE LINK (VERY IMPORTANT) */}
                 {s.file && (
                   <a
-                    href={`http://localhost:5000/uploads/${s.file}`}
+                    href={`${BASE_URL}/uploads/${s.file}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -224,60 +233,14 @@ function Dashboard() {
   );
 }
 
-/* 🎨 STYLES */
-const container = {
-  display: "flex",
-  minHeight: "100vh",
-  background: "#f3f4f6",
-};
-
-const sidebar = {
-  width: "250px",
-  background: "#d8b4fe",
-  padding: "20px",
-  color: "#333",
-};
-
-const main = {
-  flex: 1,
-  padding: "20px",
-  background: "#fdf2f8",
-};
-
-const taskCard = {
-  background: "white",
-  padding: "15px",
-  margin: "10px 0",
-  borderRadius: "12px",
-  border: "1px solid #e5e7eb",
-};
-
-const center = {
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  height: "100vh",
-  background: "#f3f4f6",
-};
-
-const card = {
-  background: "white",
-  padding: "30px",
-  borderRadius: "12px",
-  width: "300px",
-};
-
-const input = {
-  width: "100%",
-  padding: "8px",
-  margin: "10px 0",
-};
-
-const btn = {
-  width: "100%",
-  padding: "10px",
-  background: "#d8b4fe",
-  border: "none",
-};
+/* STYLES */
+const container = { display: "flex", minHeight: "100vh", background: "#f3f4f6" };
+const sidebar = { width: "250px", background: "#d8b4fe", padding: "20px" };
+const main = { flex: 1, padding: "20px", background: "#fdf2f8" };
+const taskCard = { background: "white", padding: "15px", margin: "10px 0", borderRadius: "12px" };
+const center = { display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" };
+const card = { background: "white", padding: "30px", borderRadius: "12px", width: "300px" };
+const input = { width: "100%", padding: "8px", margin: "10px 0" };
+const btn = { width: "100%", padding: "10px", background: "#d8b4fe", border: "none" };
 
 export default App;
